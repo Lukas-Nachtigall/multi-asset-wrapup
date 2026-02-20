@@ -75,10 +75,10 @@ def run_pro_wrapup():
     
     readme_content = f"""# 📈 Multi-Asset Weekly Wrap-up
 
-## 🚀 Aktueller Wochenrückblick ({file_date})
+## Aktueller Wochenrückblick ({file_date})
 ![Weekly Performance](reports/latest.png)
 
-### 📊 Markt-Kontext & Analyse
+### Markt-Kontext & Analyse
 {"\n".join(table_lines)}
 
 ---
