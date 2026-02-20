@@ -1,0 +1,104 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "a7e1c31a-c829-455c-9428-c03f3d69e10d",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "[*********************100%***********************]  8 of 8 completed"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Daten erfolgreich gespeichert: data/weekly/wrapup_2026-02-13.csv\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "import os\n",
+    "import yfinance as yf\n",
+    "import pandas as pd\n",
+    "from datetime import datetime, timedelta\n",
+    "\n",
+    "def run_weekly_wrapup():\n",
+    "    # 1. Zeitraum definieren\n",
+    "    today = datetime.now()\n",
+    "    last_monday = today - timedelta(days=today.weekday() + 7)\n",
+    "    last_friday = last_monday + timedelta(days=4)\n",
+    "    file_date = last_friday.strftime('%Y-%m-%d')\n",
+    "    \n",
+    "    # 2. Assets & Daten laden\n",
+    "    asset_dict = {\"^GSPC\": \"S&P 500\", \"^GDAXI\": \"DAX\", \"EEM\": \"EM\", \n",
+    "                  \"IEF\": \"Treasuries\", \"LQD\": \"Corps\", \"GC=F\": \"Gold\", \n",
+    "                  \"CL=F\": \"Oil\", \"BTC-USD\": \"Bitcoin\"}\n",
+    "    \n",
+    "    raw_data = yf.download(list(asset_dict.keys()), \n",
+    "                           start=last_monday.strftime('%Y-%m-%d'), \n",
+    "                           end=(last_friday + timedelta(days=1)).strftime('%Y-%m-%d'))\n",
+    "    \n",
+    "    data = raw_data['Adj Close'] if 'Adj Close' in raw_data.columns else raw_data['Close']\n",
+    "    \n",
+    "    # 3. Performance berechnen\n",
+    "    clean_data = data.dropna()\n",
+    "    weekly_perf = ((clean_data.iloc[-1] / clean_data.iloc[0]) - 1) * 100\n",
+    "    \n",
+    "    # 4. DataFrame vorbereiten\n",
+    "    df_report = pd.DataFrame(weekly_perf, columns=['Performance_Pct'])\n",
+    "    df_report['Asset_Name'] = df_report.index.map(asset_dict)\n",
+    "    df_report['Week_End'] = file_date\n",
+    "    \n",
+    "    # 5. Speichern (CSV)\n",
+    "    os.makedirs('data/weekly', exist_ok=True)\n",
+    "    filename = f\"data/weekly/wrapup_{file_date}.csv\"\n",
+    "    df_report.to_csv(filename, index=True)\n",
+    "    print(f\"Daten erfolgreich gespeichert: {filename}\")\n",
+    "\n",
+    "if __name__ == \"__main__\":\n",
+    "    run_weekly_wrapup()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "352389c0-4cf4-4cbb-a787-a238ae88f92e",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python [conda env:base] *",
+   "language": "python",
+   "name": "conda-base-py"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.13.9"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
