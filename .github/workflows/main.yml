@@ -1,0 +1,25 @@
+name: Weekly Asset Wrap-up
+on:
+  schedule:
+    - cron: '0 21 * * 5' # Jeden Freitag um 21:00 Uhr UTC
+  workflow_dispatch:      # Ermöglicht manuelles Starten per Klick
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with: {python-version: '3.9'}
+      - name: Install dependencies
+        run: pip install yfinance pandas
+      - name: Run Script
+        run: python main.py
+      - name: Commit & Push changes
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add data/weekly/*.csv
+          git commit -m "Automated weekly data update"
+          git push
