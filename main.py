@@ -1,133 +1,94 @@
-{
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": 3,
-   "id": "a7e1c31a-c829-455c-9428-c03f3d69e10d",
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "[*********************100%***********************]  8 of 8 completed\n"
-     ]
-    },
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "Update abgeschlossen: Archiv und latest.png erstellt.\n",
-      "Update abgeschlossen für 2026-02-13\n"
-     ]
+import os
+import yfinance as yf
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from datetime import datetime, timedelta
+
+def run_pro_wrapup():
+    # 1. Zeiträume definieren
+    today = datetime.now()
+    # Logik: Wenn Freitag/Samstag/Sonntag, nimm diesen Montag, sonst Vorwoche
+    if today.weekday() >= 4:
+        last_monday = today - timedelta(days=today.weekday())
+    else:
+        last_monday = today - timedelta(days=today.weekday() + 7)
+        
+    last_friday = last_monday + timedelta(days=4)
+    file_date = last_friday.strftime('%Y-%m-%d')
+    start_history = last_monday - timedelta(days=120) 
+    
+    asset_dict = {
+        "^GSPC": "S&P 500", "^GDAXI": "DAX", "EEM": "Emerging Markets",
+        "IEF": "Treasuries", "LQD": "Corps", "GC=F": "Gold",
+        "CL=F": "Oil", "BTC-USD": "Bitcoin"
     }
-   ],
-   "source": [
-    "import os\n",
-    "import yfinance as yf\n",
-    "import pandas as pd\n",
-    "import matplotlib.pyplot as plt\n",
-    "import seaborn as sns\n",
-    "from datetime import datetime, timedelta\n",
-    "\n",
-    "def run_weekly_wrapup():\n",
-    "    # 1. Zeitraum berechnen (Letzte Woche Mo-Fr)\n",
-    "    today = datetime.now()\n",
-    "    last_monday = today - timedelta(days=today.weekday() + 7)\n",
-    "    last_friday = last_monday + timedelta(days=4)\n",
-    "    file_date = last_friday.strftime('%Y-%m-%d')\n",
-    "    \n",
-    "    # 2. Assets & Daten laden\n",
-    "    asset_dict = {\n",
-    "        \"^GSPC\": \"S&P 500\", \"^GDAXI\": \"DAX\", \"EEM\": \"Emerging Markets\",\n",
-    "        \"IEF\": \"Treasuries\", \"LQD\": \"Corps\", \"GC=F\": \"Gold\",\n",
-    "        \"CL=F\": \"Oil\", \"BTC-USD\": \"Bitcoin\"\n",
-    "    }\n",
-    "    \n",
-    "    raw_data = yf.download(list(asset_dict.keys()), \n",
-    "                           start=last_monday.strftime('%Y-%m-%d'), \n",
-    "                           end=(last_friday + timedelta(days=1)).strftime('%Y-%m-%d'))\n",
-    "    \n",
-    "    data = raw_data['Adj Close'] if 'Adj Close' in raw_data.columns else raw_data['Close']\n",
-    "    \n",
-    "    # 3. Performance berechnen\n",
-    "    clean_data = data.dropna()\n",
-    "    weekly_perf = ((clean_data.iloc[-1] / clean_data.iloc[0]) - 1) * 100\n",
-    "    \n",
-    "    df_report = pd.DataFrame(weekly_perf, columns=['Performance_Pct'])\n",
-    "    df_report.index.name = 'Ticker'\n",
-    "    df_report = df_report.sort_values(by='Performance_Pct', ascending=False)\n",
-    "    \n",
-    "    # 4. Ordner erstellen\n",
-    "    os.makedirs('data/weekly', exist_ok=True)\n",
-    "    os.makedirs('reports', exist_ok=True)\n",
-    "    \n",
-    "    # 5. Speichern (CSV)\n",
-    "    df_report.to_csv(f\"data/weekly/wrapup_{file_date}.csv\")\n",
-    "    \n",
-    "    # 6. Grafik erstellen\n",
-    "    plt.figure(figsize=(14, 8))\n",
-    "    sns.set_theme(style=\"whitegrid\")\n",
-    "    colors = ['#2ecc71' if x >= 0 else '#e74c3c' for x in df_report['Performance_Pct']]\n",
-    "    \n",
-    "    ax = sns.barplot(x='Performance_Pct', y=df_report.index.map(asset_dict), \n",
-    "                     data=df_report, palette=colors, hue=df_report.index, legend=False)\n",
-    "    \n",
-    "    # Achsen-Puffer für die Labels\n",
-    "    current_xlim = ax.get_xlim()\n",
-    "    margin = max(abs(current_xlim[0]), abs(current_xlim[1])) * 0.2\n",
-    "    ax.set_xlim(current_xlim[0] - margin, current_xlim[1] + margin)\n",
-    "    \n",
-    "    plt.title(f'Weekly Multi-Asset Performance: {last_monday.strftime(\"%d.%m.\")} - {last_friday.strftime(\"%d.%m.%Y\")}', fontsize=16)\n",
-    "    plt.axvline(0, color='black', lw=1.5, ls='--')\n",
-    "    \n",
-    "    for i, v in enumerate(df_report['Performance_Pct']):\n",
-    "        ax.text(v + (margin*0.05 if v >= 0 else -margin*0.05), i, f'{v:.2f}%', \n",
-    "                va='center', fontweight='bold', ha='left' if v >= 0 else 'right')\n",
-    "\n",
-    "    # Grafik speichern - 1. Als Archiv mit Datum\n",
-    "    plot_filename = f\"reports/wrapup_{file_date}.png\"\n",
-    "    plt.savefig(plot_filename, bbox_inches='tight')\n",
-    "    \n",
-    "    # Grafik speichern - 2. Als 'latest.png' für die README (Überschreibt die alte)\n",
-    "    plt.savefig(\"reports/latest.png\", bbox_inches='tight')\n",
-    "    \n",
-    "    plt.close()\n",
-    "    print(f\"Update abgeschlossen: Archiv und latest.png erstellt.\")\n",
-    "    print(f\"Update abgeschlossen für {file_date}\")\n",
-    "\n",
-    "if __name__ == \"__main__\":\n",
-    "    run_weekly_wrapup()"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "352389c0-4cf4-4cbb-a787-a238ae88f92e",
-   "metadata": {},
-   "outputs": [],
-   "source": []
-  }
- ],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python [conda env:base] *",
-   "language": "python",
-   "name": "conda-base-py"
-  },
-  "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 3
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
-   "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "3.13.9"
-  }
- },
- "nbformat": 4,
- "nbformat_minor": 5
-}
+    
+    # 2. Daten laden (mit Puffer für heute)
+    download_end = (last_friday + timedelta(days=1)).strftime('%Y-%m-%d')
+    raw_data = yf.download(list(asset_dict.keys()), 
+                           start=start_history.strftime('%Y-%m-%d'), 
+                           end=download_end,
+                           progress=False)
+    data = raw_data['Adj Close'] if 'Adj Close' in raw_data.columns else raw_data['Close']
+    
+    # 3. Wöchentliche Performance
+    weekly_prices = data.loc[last_monday.strftime('%Y-%m-%d'):].dropna()
+    if weekly_prices.empty:
+        print("Keine Daten für diese Woche gefunden.")
+        return
+
+    perf_series = ((weekly_prices.iloc[-1] / weekly_prices.iloc[0]) - 1) * 100
+    df_report = pd.DataFrame(perf_series, columns=['Performance_Pct']).sort_values(by='Performance_Pct', ascending=False)
+    
+    # 4. Risiko & Trend Logik
+    def get_market_metrics(ticker, current_perf):
+        hist_returns = data[ticker].pct_change(5).dropna() * 100
+        std_dev = hist_returns.std()
+        risk = "⚠️ Extrem" if abs(current_perf) > 2 * std_dev else "🔄 Volatil" if abs(current_perf) > std_dev else "✅ Stabil"
+        
+        price_4w_ago = data[ticker].iloc[-20] if len(data) > 20 else data[ticker].iloc[0]
+        current_price = data[ticker].iloc[-1]
+        trend_pct = ((current_price / price_4w_ago) - 1) * 100
+        trend_emoji = "📈" if trend_pct > 0.5 else "📉" if trend_pct < -0.5 else "➡️"
+        return risk, trend_emoji
+
+    # 5. Ordner & Grafik
+    os.makedirs('data/weekly', exist_ok=True)
+    os.makedirs('reports', exist_ok=True)
+    
+    plt.figure(figsize=(12, 7))
+    sns.set_theme(style="whitegrid")
+    colors = ['#2ecc71' if x >= 0 else '#e74c3c' for x in df_report['Performance_Pct']]
+    sns.barplot(x='Performance_Pct', y=df_report.index.map(asset_dict), data=df_report, palette=colors, hue=df_report.index, legend=False)
+    plt.title(f'Multi-Asset Performance ({last_monday.strftime("%d.%m.")} - {last_friday.strftime("%d.%m.%Y")})', fontsize=15)
+    plt.axvline(0, color='black', lw=1)
+    plt.savefig("reports/latest.png", bbox_inches='tight')
+    plt.savefig(f"reports/wrapup_{file_date}.png", bbox_inches='tight')
+    plt.close()
+
+    # 6. Tabelle für README
+    table_lines = ["| Asset | Performance | Trend (4W) | Risiko-Status |", "| :--- | :--- | :--- | :--- |"]
+    for ticker, row in df_report.iterrows():
+        risk_status, trend_icon = get_market_metrics(ticker, row['Performance_Pct'])
+        table_lines.append(f"| {asset_dict[ticker]} | {row['Performance_Pct']:+.2f}% | {trend_icon} | {risk_status} |")
+    
+    readme_content = f"""# 📈 Multi-Asset Weekly Wrap-up
+
+## 🚀 Aktueller Wochenrückblick ({file_date})
+![Weekly Performance](reports/latest.png)
+
+### 📊 Markt-Kontext & Analyse
+{"\n".join(table_lines)}
+
+---
+*Automatisch aktualisiert am {datetime.now().strftime('%d.%m.%Y um %H:%M')}*
+"""
+    with open("README.md", "w", encoding='utf-8') as f:
+        f.write(readme_content)
+    
+    df_report.to_csv(f"data/weekly/wrapup_{file_date}.csv")
+    print(f"Update für {file_date} erfolgreich!")
+
+if __name__ == "__main__":
+    run_pro_wrapup()
