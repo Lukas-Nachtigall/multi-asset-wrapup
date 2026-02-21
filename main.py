@@ -67,19 +67,23 @@ def run_pro_wrapup():
     plt.savefig(f"reports/wrapup_{file_date}.png", bbox_inches='tight')
     plt.close()
 
-    # 6. Tabelle für README
+   # 6. Tabelle für README
     table_lines = ["| Asset | Performance | Trend (4W) | Risiko-Status |", "| :--- | :--- | :--- | :--- |"]
     for ticker, row in df_report.iterrows():
         risk_status, trend_icon = get_market_metrics(ticker, row['Performance_Pct'])
         table_lines.append(f"| {asset_dict[ticker]} | {row['Performance_Pct']:+.2f}% | {trend_icon} | {risk_status} |")
     
+    # WICHTIG: Den Zeilenumbruch VOR dem f-string definieren
+    table_string = "\n".join(table_lines)
+    
+    # Nun nutzen wir table_string OHNE Backslash im f-string
     readme_content = f"""# 📈 Multi-Asset Weekly Wrap-up
 
 ## Aktueller Wochenrückblick ({file_date})
 ![Weekly Performance](reports/latest.png)
 
 ### Markt-Kontext & Analyse
-{"\n".join(table_lines)}
+{table_string}
 
 ---
 *Automatisch aktualisiert am {datetime.now().strftime('%d.%m.%Y um %H:%M')}*
