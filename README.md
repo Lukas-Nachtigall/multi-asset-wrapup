@@ -6,14 +6,14 @@
 ### Markt-Kontext & Analyse
 | Asset | Performance | Trend (4W) | Risiko-Status |
 | :--- | :--- | :--- | :--- |
-| S&P 500 (EUR) | +0.00% | ➡️ | N/A |
-| DAX | +0.00% | ➡️ | N/A |
-| Emerging Markets | +0.00% | ➡️ | N/A |
-| Treasuries (EUR) | +0.00% | ➡️ | N/A |
-| Gold | +0.00% | ➡️ | N/A |
-| Oil | +0.00% | ➡️ | N/A |
-| Bitcoin | +0.00% | ➡️ | N/A |
-| Corps (EUR) | +nan% | ➡️ | ✅ Stabil |
+| Oil | +4.79% | ➡️ | ✅ Stabil |
+| Bitcoin | +4.03% | 📈 | ✅ Stabil |
+| DAX | +0.16% | ➡️ | ✅ Stabil |
+| Treasuries | -1.20% | ➡️ | ⚠️ Extrem |
+| Gold | -1.34% | ➡️ | ✅ Stabil |
+| Corps | -2.39% | ➡️ | ⚠️ Extrem |
+| S&P 500 | -2.41% | ➡️ | 🔄 Volatil |
+| Emerging Markets | -2.82% | ➡️ | 🔄 Volatil |
 
---- 
-*Automatisch aktualisiert am 15.03.2026 um 17:09*
+---
+*Automatisch aktualisiert am 13.03.2026 um 21:59*
