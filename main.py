@@ -33,20 +33,19 @@ def run_pro_wrapup():
         "BTC-USD": "Bitcoin"
     }
     
-    # 2. Daten laden
+   # 2. Daten laden
     download_end = (last_friday + timedelta(days=1)).strftime('%Y-%m-%d')
     raw_data = yf.download(list(asset_dict.keys()), 
                            start=start_history.strftime('%Y-%m-%d'), 
                            end=download_end,
                            progress=False)
                            
-   data = raw_data['Adj Close'] if 'Adj Close' in raw_data.columns else raw_data['Close']
+    data = raw_data['Adj Close'] if 'Adj Close' in raw_data.columns else raw_data['Close']
 
     # WICHTIG: Erst Uhrzeiten entfernen, dann Lücken füllen
     data.index = pd.to_datetime(data.index).date
     data = data.ffill().bfill()
     
-    # 3. Wöchentliche Performance & 4. Trend/Risiko kombiniert
     perf_dict = {}
     metrics_dict = {}
 
