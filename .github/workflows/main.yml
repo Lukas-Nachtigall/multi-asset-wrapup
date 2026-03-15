@@ -1,4 +1,5 @@
 name: Weekly Asset Wrap-up
+
 on:
   schedule:
     - cron: '0 21 * * 5' # Jeden Freitag um 21:00 Uhr UTC
@@ -7,20 +8,32 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # WICHTIG: Erlaubt der Action, Dateien im Repo zu ändern
+    permissions:
+      contents: write
+      
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
-        with: {python-version: '3.9'}
+        with:
+          python-version: '3.9'
+
       - name: Install dependencies
         run: pip install yfinance pandas tabulate matplotlib seaborn
+
       - name: Run Script
         run: python main.py
+
       - name: Commit & Push changes
         run: |
-          git config --global user.name 'GitHub Action'
-          git config --global user.email 'action@github.com'
-          git add data/weekly/*.csv
-          git add .
-          git commit -m "Automated weekly data update"
-          git push
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          # Alle relevanten Ordner hinzufügen
+          git add README.md reports/*.png data/weekly/*.csv
+          
+          # Nur committen, wenn Änderungen da sind (vermeidet Fehler-Abbruch)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Automated weekly update" && git push)
