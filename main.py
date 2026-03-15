@@ -40,9 +40,10 @@ def run_pro_wrapup():
                            end=download_end,
                            progress=False)
                            
-    data = raw_data['Adj Close'] if 'Adj Close' in raw_data.columns else raw_data['Close']
-    
-    # Lücken füllen (Wochenenden & Feiertage)
+   data = raw_data['Adj Close'] if 'Adj Close' in raw_data.columns else raw_data['Close']
+
+    # WICHTIG: Erst Uhrzeiten entfernen, dann Lücken füllen
+    data.index = pd.to_datetime(data.index).date
     data = data.ffill().bfill()
     
     # 3. Wöchentliche Performance & 4. Trend/Risiko kombiniert
@@ -51,21 +52,30 @@ def run_pro_wrapup():
 
     for ticker in asset_dict.keys():
         try:
-            # PERFORMANCE (Letzter Freitag bis dieser Freitag)
-            price_start_week = data[ticker].loc[:prev_friday.strftime('%Y-%m-%d')].iloc[-1]
-            price_end_week = data[ticker].loc[:last_friday.strftime('%Y-%m-%d')].iloc[-1]
-            perf_pct = ((price_end_week / price_start_week) - 1) * 100
+            # 1. Handelstage finden (sucht den nächsten realen Datenpunkt in der Vergangenheit)
+            actual_start_date = data.index[data.index <= prev_friday.date()][-1]
+            actual_end_date   = data.index[data.index <= last_friday.date()][-1]
+            actual_4w_date    = data.index[data.index <= (last_friday - timedelta(days=28)).date()][-1]
+
+            # 2. Preise abrufen
+            price_start = data.loc[actual_start_date, ticker]
+            price_end   = data.loc[actual_end_date, ticker]
+            price_4w    = data.loc[actual_4w_date, ticker]
+
+            # 3. Wöchentliche Performance
+            perf_pct = ((price_end / price_start) - 1) * 100
             perf_dict[ticker] = perf_pct
             
-            # RISIKO (Vola der letzten 5-Tage-Intervalle)
+            # 4. Risiko-Status
             hist_returns = data[ticker].pct_change(5).dropna() * 100
             std_dev = hist_returns.std()
-            risk_status = "⚠️ Extrem" if abs(perf_pct) > 2 * std_dev else "🔄 Volatil" if abs(perf_pct) > std_dev else "✅ Stabil"
+            if std_dev > 0:
+                risk_status = "⚠️ Extrem" if abs(perf_pct) > 2 * std_dev else "🔄 Volatil" if abs(perf_pct) > std_dev else "✅ Stabil"
+            else:
+                risk_status = "✅ Stabil"
             
-            # TREND (Exakt 28 Tage zurück)
-            date_4w_ago = last_friday - timedelta(days=28)
-            price_4w_ago = data[ticker].loc[:date_4w_ago.strftime('%Y-%m-%d')].iloc[-1]
-            trend_pct = ((price_end_week / price_4w_ago) - 1) * 100
+            # 5. Trend (4 Wochen)
+            trend_pct = ((price_end / price_4w) - 1) * 100
             trend_icon = "📈" if trend_pct > 0.5 else "📉" if trend_pct < -0.5 else "➡️"
             
             metrics_dict[ticker] = (risk_status, trend_icon)
@@ -75,8 +85,9 @@ def run_pro_wrapup():
             perf_dict[ticker] = 0.0
             metrics_dict[ticker] = ("N/A", "➡️")
 
+    # Ergebnis-DataFrame erstellen
     df_report = pd.DataFrame.from_dict(perf_dict, orient='index', columns=['Performance_Pct']).sort_values(by='Performance_Pct', ascending=False)
-    
+
     # 5. Grafik & Report-Erstellung
     os.makedirs('reports', exist_ok=True)
     plt.figure(figsize=(12, 7))
