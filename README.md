@@ -1,19 +1,19 @@
 # 📈 Multi-Asset Weekly Wrap-up
 
-## Aktueller Wochenrückblick (2026-03-27)
+## Aktueller Wochenrückblick (2026-04-03)
 ![Weekly Performance](reports/latest.png)
 
 ### Markt-Kontext & Analyse
 | Asset | Performance | Trend (4W) | Risiko-Status |
 | :--- | :--- | :--- | :--- |
-| Oil | +14.81% | ➡️ | ⚠️ Extrem |
-| Gold | +2.66% | ➡️ | ✅ Stabil |
-| Treasuries | -0.61% | ➡️ | 🔄 Volatil |
-| Corps | -0.87% | ➡️ | 🔄 Volatil |
-| DAX | -1.56% | ➡️ | ✅ Stabil |
-| S&P 500 | -3.22% | ➡️ | ⚠️ Extrem |
-| Emerging Markets | -3.68% | ➡️ | 🔄 Volatil |
-| Bitcoin | -6.90% | ➡️ | 🔄 Volatil |
+| Oil | +8.42% | ➡️ | 🔄 Volatil |
+| S&P 500 | +3.77% | ➡️ | ⚠️ Extrem |
+| Emerging Markets | +3.36% | ➡️ | 🔄 Volatil |
+| Gold | +2.77% | ➡️ | ✅ Stabil |
+| DAX | +2.68% | ➡️ | 🔄 Volatil |
+| Corps | +1.16% | ➡️ | 🔄 Volatil |
+| Treasuries | +0.32% | ➡️ | ✅ Stabil |
+| Bitcoin | +0.30% | 📉 | ✅ Stabil |
 
 ---
-*Automatisch aktualisiert am 27.03.2026 um 22:00*
+*Automatisch aktualisiert am 03.04.2026 um 21:31*
